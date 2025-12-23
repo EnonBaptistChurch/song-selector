@@ -67,6 +67,7 @@ function decodeHtml(html) {
         </select>
       </div>
 
+      
       <!-- Table -->
       <table style="width: 100%; border-collapse: collapse;">
         <thead>
