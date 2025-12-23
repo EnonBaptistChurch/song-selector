@@ -1,4 +1,4 @@
-name: Deploy Song Selector to GitHub Pages
+name: Deploy Song Selector
 
 on:
   push:
@@ -6,7 +6,7 @@ on:
       - main
 
 jobs:
-  build-and-deploy:
+  deploy:
     runs-on: ubuntu-latest
 
     steps:
@@ -20,11 +20,9 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
-        working-directory: ./  # if Astro project is at repo root
 
       - name: Build Astro project
         run: npm run build
-        working-directory: ./  # Astro build outputs to dist/
 
       - name: Add .nojekyll
         run: touch ./dist/.nojekyll
