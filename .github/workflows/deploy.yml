@@ -1,16 +1,17 @@
-name: Deploy Song Selector
+name: Deploy Astro Song Selector
 
 on:
   push:
     branches:
       - main
+      - gh-pages
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repo
+      - name: Checkout
         uses: actions/checkout@v4
 
       - name: Setup Node.js
@@ -21,7 +22,7 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build Astro project
+      - name: Build Astro
         run: npm run build
 
       - name: Add .nojekyll
@@ -31,5 +32,5 @@ jobs:
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_branch: gh-pages
           publish_dir: ./dist
+          publish_branch: gh-pages
