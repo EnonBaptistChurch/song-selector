@@ -3,9 +3,7 @@ import vue from '@astrojs/vue';
 
 export default defineConfig({
   integrations: [vue()],
-  site: 'https://enonbaptistchurch.github.io/song-selector/', // your subpath
-  base: '/song-selector/', // important for CSS/JS assets
-  build: {
-    outDir: 'dist', // default
-  },
+  site: 'https://enonbaptistchurch.github.io/song-selector/', // your GitHub Pages URL
+  base: '/song-selector/',                      // important for assets
+  build: { outDir: 'dist' },                   // default Astro build folder
 });

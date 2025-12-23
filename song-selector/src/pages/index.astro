@@ -1,5 +1,5 @@
 ---
-import HymnsTable from '../components/HymnsTable.vue'
+import HymnsTable from '../components/HymnsTable.vue';
 ---
 
 <html lang="en">
@@ -7,15 +7,11 @@ import HymnsTable from '../components/HymnsTable.vue'
     <meta charset="UTF-8" />
     <title>Hymns & Media Sources</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <style>
-      body { font-family: system-ui, sans-serif; max-width: 1200px; margin: 3rem auto; padding: 0 1rem; }
-      h1 { margin-bottom: 1rem; }
-    </style>
   </head>
   <body>
     <h1>Hymns & Media Sources</h1>
 
-    <!-- Pure client-side Vue component -->
+    <!-- Vue component mounts in browser only -->
     <HymnsTable client:only="vue" />
   </body>
 </html>
