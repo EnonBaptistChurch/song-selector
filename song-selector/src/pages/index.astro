@@ -1,5 +1,17 @@
 ---
 import HymnsTable from '../components/HymnsTable.vue';
+import styles from '../styles/global.css'
+
+
+const startYear = 2025;        
+const currentYear = new Date().getFullYear();
+
+let  displayYear;
+if (startYear === currentYear) {
+  displayYear = `${startYear}`;           
+} else if (currentYear > 2025) {
+  displayYear = `${startYear}–${currentYear}`; 
+}
 ---
 
 <html lang="en">
@@ -9,9 +21,21 @@ import HymnsTable from '../components/HymnsTable.vue';
     <meta name="viewport" content="width=device-width, initial-scale=1" />
   </head>
   <body>
-    <h1>Hymns & Media Sources</h1>
+  <header class="bg-blue-950 text-white p-1">
+    <a href="/"><h1 class="text-3xl font-bold">Enon Baptist Church Tools</h1>
+    </a>
+  </header>
 
-    <!-- Vue component runs only in the browser -->
-    <HymnsTable client:only="vue" />
+    <main class="mx-auto p-6">
+      <h2 class="text-2xl font-semibold mb-2 text-gray-800">Hymns & Media Sources</h2>
+      <div class="bg-white rounded-lg shadow pb-6">
+        <!-- Vue component runs only in the browser -->
+        <HymnsTable client:only="vue" />
+      </div>
+    </main>
   </body>
+
+  <footer class="bg-gray-800 text-white p-4 mt-6 text-center">
+      &copy; {displayYear} Enon Baptist Church
+    </footer>
 </html>
