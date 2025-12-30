@@ -29,13 +29,7 @@ onMounted(async () => {
   }
 
   try {
-    const res = await fetch(
-      'https://api.allorigins.win/raw?url=' +
-        encodeURIComponent(
-          'https://raw.githubusercontent.com/EnonBaptistChurch/church-data/main/song-selector/Hymns.json'
-        )
-    )
-    const data = await res.json()
+    const data = await getHymns()
     hymns.value = data
     localStorage.setItem('hymns', JSON.stringify(data))
   } catch (err) {
