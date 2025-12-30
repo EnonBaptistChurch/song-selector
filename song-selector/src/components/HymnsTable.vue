@@ -133,11 +133,12 @@ function decodeHtml(html) {
           <tr v-for="hymn in filteredHymns" :key="hymn.Number">
             <td>{{ hymn.Number }}</td>
             <td>
-              <WarningSign v-if="hymn.Warning" :level="hymn.Warning.Level" :message="hymn.Warning.Message" />
+              
               <span v-if="hymn.VideoLink">
                 <a :href="hymn.HymnMedia.MediaSourceUrl" target="_blank">{{ decodeHtml(hymn.Title) }}</a>
               </span>
-              <span v-else>{{ decodeHtml(hymn.Title) }}</span>
+              <span v-else>{{ decodeHtml(hymn.Title)  }}</span>
+              {{    }}<WarningSign v-if="hymn.Warning" :level="hymn.Warning.Level" :message="hymn.Warning.Message" />
             </td>
             <td class="media-cell">
               <audio v-if="hymn.HymnMedia?.AudioSourceUrl" :src="hymn.HymnMedia.AudioSourceUrl" controls></audio>
