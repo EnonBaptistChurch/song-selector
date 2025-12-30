@@ -1,6 +1,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import WarningSign from './WarningSign.vue'
+import { getHymns } from '../utils/getHymns.ts'
 
 const hymns = ref([])
 const search = ref('')
