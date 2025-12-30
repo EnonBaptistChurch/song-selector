@@ -3,7 +3,7 @@ export async function getHymns() {
 
   if (import.meta.env.PROD) {
     // Production always uses the built JSON
-    url = '/data/Hymns.json';
+    url = '/song-selector/data/Hymns.json';
   } else {
     // Dev mode
     if (import.meta.env.HYMNS_JSON_URL) {
