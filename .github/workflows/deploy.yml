@@ -26,7 +26,15 @@ jobs:
       - name: Install dependencies
         working-directory: ./song-selector
         run: npm install
-      
+
+      - name: Download JSON data (private repo)
+        run: |
+          mkdir -p song-selector/src/data
+          curl -L \
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            https://raw.githubusercontent.com/EnonBaptistChurch/church-data/refs/heads/main/song-selector/Hymns.json \
+            -o song-selector/src/data/Hymns.json
+
       - name: Build with Astro
         working-directory: ./song-selector
         run: npm run build
