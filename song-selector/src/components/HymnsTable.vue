@@ -164,13 +164,14 @@ function decodeHtml(html) {
           <p><strong>{{ decodeHtml(hymn.Title) }}</strong></p>
           <p><strong>Type:</strong> {{ hymn.Type }}</p>
           <p>
-            <strong>Media:</strong>
+            <strong>Media:</strong></p>
             <audio v-if="hymn.HymnMedia?.AudioSourceUrl" :src="hymn.HymnMedia.AudioSourceUrl" controls></audio>
             <div>
               <a v-if="hymn.HymnMedia?.VideoSourceUrl" :href="hymn.HymnMedia.VideoSourceUrl" target="_blank" class="video-link">Video Download Link</a>
             </div>
+            <p>
             <span v-if="!hymn.HymnMedia" class="none-text">None</span>
-          </p>
+            </p>
         </div>
       </div>
     </div>
