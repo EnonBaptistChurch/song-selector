@@ -142,7 +142,7 @@ function decodeHtml(html) {
               {{    }}<WarningSign v-if="hymn.Warning" :level="hymn.Warning.Level" :message="hymn.Warning.Message" />
             </td>
             <td class="media-cell">
-              <audio v-if="hymn.HymnMedia?.AudioSourceUrl" :src="hymn.HymnMedia.AudioSourceUrl" controls></audio>
+              <audio class="audio-player" v-if="hymn.HymnMedia?.AudioSourceUrl" :src="hymn.HymnMedia.AudioSourceUrl" controls></audio>
               <a v-if="hymn.HymnMedia?.VideoSourceUrl" :href="hymn.HymnMedia.VideoSourceUrl" target="_blank" class="video-link">Video Download</a>
               <span v-if="!hymn.HymnMedia" class="none-text">None</span>
             </td>
@@ -161,7 +161,7 @@ function decodeHtml(html) {
           <p><strong>Type:</strong> {{ hymn.Type }}</p>
           <p>
             <strong>Media:</strong></p>
-            <audio v-if="hymn.HymnMedia?.AudioSourceUrl" :src="hymn.HymnMedia.AudioSourceUrl" controls></audio>
+            <audio class="audio-player" v-if="hymn.HymnMedia?.AudioSourceUrl" :src="hymn.HymnMedia.AudioSourceUrl" controls></audio>
             <div>
               <a v-if="hymn.HymnMedia?.VideoSourceUrl" :href="hymn.HymnMedia.VideoSourceUrl" target="_blank" class="video-link">Video Download Link</a>
             </div>
@@ -313,5 +313,9 @@ th, td {
   border-radius: 6px;
   background: #fff;
   font-size: 0.95rem;
+}
+
+.audio-player {
+  max-width: 250px;
 }
 </style>
