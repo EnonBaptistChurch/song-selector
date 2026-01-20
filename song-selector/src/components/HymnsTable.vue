@@ -2,6 +2,7 @@
 import { ref, computed, onMounted } from 'vue'
 import WarningSign from './WarningSign.vue'
 import { getHymns } from '../utils/getHymns.ts'
+import MiniAudioPlayer from './MiniAudioPlayer.vue'
 
 const hymns = ref([])
 const search = ref('')
@@ -142,12 +143,16 @@ function decodeHtml(html) {
               {{    }}<WarningSign v-if="hymn.Warning" :level="hymn.Warning.Level" :message="hymn.Warning.Message" />
             </td>
             <td class="media-cell">
-              <audio class="audio-player" v-if="hymn.HymnMedia?.AudioSourceUrl" :src="hymn.HymnMedia.AudioSourceUrl" controls></audio>
+              
+              <MiniAudioPlayer v-if="hymn.HymnMedia?.AudioSourceUrl" :src="hymn.HymnMedia.AudioSourceUrl" :videoSrc="hymn.HymnMedia?.VideoSourceUrl" />
+
+              
+              <!-- <audio class="audio-player" v-if="hymn.HymnMedia?.AudioSourceUrl" :src="hymn.HymnMedia.AudioSourceUrl" controls></audio>
               <a v-if="hymn.HymnMedia?.VideoSourceUrl" :href="hymn.HymnMedia.VideoSourceUrl" target="_blank" class="video-link">Video Download</a>
-              <span v-if="!hymn.HymnMedia" class="none-text">None</span>
+              <span v-if="!hymn.HymnMedia" class="none-text">None</span> -->
             </td>
-            <td>{{ hymn.Type === 'EMW Christian Hymns' ? 'EMWCH' : hymn.Type }}</td>
-            <td>{{ hymn.Warning?.Message || '' }}</td>
+            <td class="hymn-type">{{ hymn.Type === 'EMW Christian Hymns' ? 'EMWCH' : hymn.Type }}</td>
+            <td class="notes">{{ hymn.Warning?.Message || '' }}</td>
           </tr>
         </tbody>
       </table>
@@ -161,10 +166,8 @@ function decodeHtml(html) {
           <p><strong>Type:</strong> {{ hymn.Type }}</p>
           <p>
             <strong>Media:</strong></p>
-            <audio class="audio-player" v-if="hymn.HymnMedia?.AudioSourceUrl" :src="hymn.HymnMedia.AudioSourceUrl" controls></audio>
-            <div>
-              <a v-if="hymn.HymnMedia?.VideoSourceUrl" :href="hymn.HymnMedia.VideoSourceUrl" target="_blank" class="video-link">Video Download Link</a>
-            </div>
+            <MiniAudioPlayer v-if="hymn.HymnMedia?.AudioSourceUrl" :src="hymn.HymnMedia.AudioSourceUrl" :videoSrc="hymn.HymnMedia?.VideoSourceUrl" />
+            <!-- <audio class="audio-player" v-if="hymn.HymnMedia?.AudioSourceUrl" :src="hymn.HymnMedia.AudioSourceUrl" controls></audio> -->
             <p>
             <span v-if="!hymn.HymnMedia" class="none-text">None</span>
             </p>
@@ -275,16 +278,12 @@ table {
 
 th, td {
   border: 1px solid #ccc;
-  padding: 0.5rem;
+  padding: 0.1rem;
   text-align: left;
   vertical-align: top;
 }
 
-.media-cell {
-  display: flex;
-  flex-direction: column;
-  gap: 0.3rem;
-}
+
 
 .video-link {
   color: #2563eb;
@@ -314,8 +313,7 @@ th, td {
   background: #fff;
   font-size: 0.95rem;
 }
-
-.audio-player {
-  max-width: 250px;
+.notes {
+  overflow-wrap: normal;
 }
 </style>
