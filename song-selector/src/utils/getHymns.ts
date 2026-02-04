@@ -6,8 +6,8 @@ export async function getHymns() {
     url = '/song-selector/data/Hymns.json';
   } else {
     // Dev mode
-    if (import.meta.env.HYMNS_JSON_URL) {
-      url = import.meta.env.HYMNS_JSON_URL; // e.g. /src/dev-data/Hymns.json
+    if (import.meta.env.PUBLIC_HYMNS_JSON_URL) {
+      url = import.meta.env.PUBLIC_HYMNS_JSON_URL; 
     } else {
       // Fallback: pull from GitHub raw
       url = 'https://raw.githubusercontent.com/EnonBaptistChurch/church-data/main/song-selector/Hymns.json';
