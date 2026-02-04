@@ -3,7 +3,8 @@ import { ref, computed, onMounted } from 'vue'
 import WarningSign from './WarningSign.vue'
 import { getHymns } from '../utils/getHymns.ts'
 import MiniAudioPlayer from './MiniAudioPlayer.vue'
-
+import GDrive from '../assets/GDrive.vue'
+import ChristianHymnsLogo from '../assets/ChristianHymnsLogo.vue'
 const hymns = ref([])
 const search = ref('')
 const hasMediaFilter = ref('')
@@ -124,16 +125,21 @@ function decodeHtml(html) {
       <table v-if="viewMode === 'table'">
         <thead>
           <tr>
-            <th>Number</th>
+            <th>Hymn Number</th>
             <th>Title</th>
             <th>Media</th>
-            <th>Type</th>
             <th>Notes</th>
           </tr>
         </thead>
         <tbody>
           <tr v-for="hymn in filteredHymns" :key="hymn.Number">
-            <td>{{ hymn.Number }}</td>
+            <td>
+              {{ hymn.Type == 'EMW Christian Hymns' ? '' : hymn.Type }} 
+              <ChristianHymnsLogo 
+                v-if="hymn.Type === 'EMW Christian Hymns'" 
+                style="vertical-align:middle;" />
+              {{ hymn.Number }}
+            </td>
             <td>
               
               <span v-if="hymn.VideoLink">
@@ -144,14 +150,16 @@ function decodeHtml(html) {
             </td>
             <td class="media-cell">
               
-              <MiniAudioPlayer v-if="hymn.HymnMedia?.AudioSourceUrl" :src="hymn.HymnMedia.AudioSourceUrl" :videoSrc="hymn.HymnMedia?.VideoSourceUrl" />
-
+              <MiniAudioPlayer v-if="hymn.HymnMedia && hymn.HymnMedia.some(x => x.AudioSourceUrl)" :src="hymn.HymnMedia.find(x => x.AudioSourceUrl)?.AudioSourceUrl" :videoSrc="hymn.HymnMedia.find(x => x.AudioSourceUrl)?.VideoSourceUrl" />
+              <div v-if="hymn.HymnMedia && hymn.HymnMedia.some(x => x.HaveAudioVersionLocally)">
+                <GDrive /> Have an Audio Version in the Google Drive
+              </div>
+              <div v-if="!hymn.HymnMedia" class="none-text">None</div>
               
               <!-- <audio class="audio-player" v-if="hymn.HymnMedia?.AudioSourceUrl" :src="hymn.HymnMedia.AudioSourceUrl" controls></audio>
               <a v-if="hymn.HymnMedia?.VideoSourceUrl" :href="hymn.HymnMedia.VideoSourceUrl" target="_blank" class="video-link">Video Download</a>
               <span v-if="!hymn.HymnMedia" class="none-text">None</span> -->
             </td>
-            <td class="hymn-type">{{ hymn.Type === 'EMW Christian Hymns' ? 'EMWCH' : hymn.Type }}</td>
             <td class="notes">{{ hymn.Warning?.Message || '' }}</td>
           </tr>
         </tbody>
@@ -166,7 +174,10 @@ function decodeHtml(html) {
           <p><strong>Type:</strong> {{ hymn.Type }}</p>
           <p>
             <strong>Media:</strong></p>
-            <MiniAudioPlayer v-if="hymn.HymnMedia?.AudioSourceUrl" :src="hymn.HymnMedia.AudioSourceUrl" :videoSrc="hymn.HymnMedia?.VideoSourceUrl" />
+            <MiniAudioPlayer v-if="hymn.HymnMedia && hymn.HymnMedia.some(x => x.AudioSourceUrl)" :src="hymn.HymnMedia.find(x => x.AudioSourceUrl)?.AudioSourceUrl" :videoSrc="hymn.HymnMedia.find(x => x.AudioSourceUrl)?.VideoSourceUrl" />
+            <div v-if="hymn.HymnMedia && hymn.HymnMedia.some(x => x.HaveAudioVersionLocally)">
+                <p >Have an Audio Version in the Google Drive </p>
+              </div>
             <!-- <audio class="audio-player" v-if="hymn.HymnMedia?.AudioSourceUrl" :src="hymn.HymnMedia.AudioSourceUrl" controls></audio> -->
             <p>
             <span v-if="!hymn.HymnMedia" class="none-text">None</span>
