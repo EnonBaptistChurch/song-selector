@@ -168,10 +168,11 @@ function decodeHtml(html) {
       <!-- GRID VIEW -->
       <div v-if="viewMode === 'grid'" class="grid">
         <div v-for="hymn in filteredHymns" :key="hymn.Number" class="card">
-          <h3>{{ hymn.Number }}</h3>
+          <h3><ChristianHymnsLogo 
+                v-if="hymn.Type === 'EMW Christian Hymns'" 
+                style="vertical-align:middle;" />{{ hymn.Number }}</h3>
           <WarningSign v-if="hymn.Warning" :level="hymn.Warning.Level" :message="hymn.Warning.Message" />
           <p><strong>{{ decodeHtml(hymn.Title) }}</strong></p>
-          <p><strong>Type:</strong> {{ hymn.Type }}</p>
           <p>
             <strong>Media:</strong></p>
             <MiniAudioPlayer v-if="hymn.HymnMedia && hymn.HymnMedia.some(x => x.AudioSourceUrl)" :src="hymn.HymnMedia.find(x => x.AudioSourceUrl)?.AudioSourceUrl" :videoSrc="hymn.HymnMedia.find(x => x.AudioSourceUrl)?.VideoSourceUrl" />
