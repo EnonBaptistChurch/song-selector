@@ -57,8 +57,8 @@ const filteredHymns = computed(() => {
     const matchesWarning = warningFilter.value === ''
       ? true
       : warningFilter.value === 'yes'
-      ? !!h.Warning
-      : !h.Warning
+      ? !!h.HymnMedia.Warning
+      : !h.HymnMedia.Warning
     return matchesTitle && matchesMedia && matchesTag && matchesWarning
   })
 })
@@ -70,6 +70,7 @@ function decodeHtml(html) {
   txt.innerHTML = html
   return txt.value
 }
+
 </script>
 
 <template>
@@ -146,19 +147,48 @@ function decodeHtml(html) {
                 <a :href="hymn.HymnMedia.MediaSourceUrl" target="_blank">{{ decodeHtml(hymn.Title) }}</a>
               </span>
               <span v-else>{{ decodeHtml(hymn.Title)  }}</span>
-              {{    }}<WarningSign v-if="hymn.Warning" :level="hymn.Warning.Level" :message="hymn.Warning.Message" />
             </td>
             <td class="media-cell">
-              
-              <MiniAudioPlayer v-if="hymn.HymnMedia && hymn.HymnMedia.some(x => x.AudioSourceUrl)" :src="hymn.HymnMedia.find(x => x.AudioSourceUrl)?.AudioSourceUrl" :videoSrc="hymn.HymnMedia.find(x => x.AudioSourceUrl)?.VideoSourceUrl" />
-              <div v-if="hymn.HymnMedia && hymn.HymnMedia.some(x => x.HaveAudioVersionLocally)">
-                <GDrive /> Have an Audio Version in the Google Drive
+              <div class="media-inner">
+
+                <!-- When media exists -->
+                <template v-if="hymn.HymnMedia?.length">
+                  <div class="media-grid">
+                    <div
+                      v-for="(media, index) in hymn.HymnMedia"
+                      :key="media.Id || index"
+                      class="media-col"
+                    >
+                  
+                  <MiniAudioPlayer
+                        v-if="media.HymnMediaType === 'EMW' && media.AudioSourceUrl"
+                        :src="media.AudioSourceUrl"
+                        :videoSrc="media.VideoSourceUrl"
+                      >
+                      <WarningSign v-if="media.Warning" :level="media.Warning.Level" :message="media.Warning.Message" />      
+                      </MiniAudioPlayer>
+                  
+
+                      <div class="gdrivewrapper" v-else-if="media.HymnMediaType === 'Google Drive'">
+                        
+                          <WarningSign v-if="media.Warning" :level="media.Warning.Level" :message="media.Warning.Message" />
+                          <p v-if="media.Warning">{{ media.Warning.Message }}</p>
+                        <GDrive> Have Audio in Google Drive
+
+                          
+                        </GDrive>
+                        
+                      </div>
+                    </div>
+                  </div>
+                </template>
+
+                <!-- When none -->
+                <div v-else class="media-col none-text">
+                  None
+                </div>
+
               </div>
-              <div v-if="!hymn.HymnMedia" class="none-text">None</div>
-              
-              <!-- <audio class="audio-player" v-if="hymn.HymnMedia?.AudioSourceUrl" :src="hymn.HymnMedia.AudioSourceUrl" controls></audio>
-              <a v-if="hymn.HymnMedia?.VideoSourceUrl" :href="hymn.HymnMedia.VideoSourceUrl" target="_blank" class="video-link">Video Download</a>
-              <span v-if="!hymn.HymnMedia" class="none-text">None</span> -->
             </td>
             <td class="notes">{{ hymn.Warning?.Message || '' }}</td>
           </tr>
@@ -171,18 +201,40 @@ function decodeHtml(html) {
           <h3><ChristianHymnsLogo 
                 v-if="hymn.Type === 'EMW Christian Hymns'" 
                 style="vertical-align:middle;" />{{ hymn.Number }}</h3>
-          <WarningSign v-if="hymn.Warning" :level="hymn.Warning.Level" :message="hymn.Warning.Message" />
+          <!-- <WarningSign v-if="hymn.Warning" :level="hymn.Warning.Level" :message="hymn.Warning.Message" /> -->
           <p><strong>{{ decodeHtml(hymn.Title) }}</strong></p>
           <p>
             <strong>Media:</strong></p>
-            <MiniAudioPlayer v-if="hymn.HymnMedia && hymn.HymnMedia.some(x => x.AudioSourceUrl)" :src="hymn.HymnMedia.find(x => x.AudioSourceUrl)?.AudioSourceUrl" :videoSrc="hymn.HymnMedia.find(x => x.AudioSourceUrl)?.VideoSourceUrl" />
-            <div v-if="hymn.HymnMedia && hymn.HymnMedia.some(x => x.HaveAudioVersionLocally)">
-                <p >Have an Audio Version in the Google Drive </p>
+            <template v-if="hymn.HymnMedia?.length">
+              <div class="media-grid">
+                <div
+                  v-for="(media, index) in hymn.HymnMedia"
+                  :key="media.Id || index"
+                  class="media-col"
+                >
+              
+              <MiniAudioPlayer
+                    v-if="media.HymnMediaType === 'EMW' && media.AudioSourceUrl"
+                    :src="media.AudioSourceUrl"
+                    :videoSrc="media.VideoSourceUrl"
+                  >
+                  <WarningSign v-if="media.Warning" :level="media.Warning.Level" :message="media.Warning.Message" />      
+                  </MiniAudioPlayer>
+              
+
+                  <div class="gdrivewrapper" v-else-if="media.HymnMediaType === 'Google Drive'">
+                    
+                      <WarningSign v-if="media.Warning" :level="media.Warning.Level" :message="media.Warning.Message" />
+                      <p v-if="media.Warning">{{ media.Warning.Message }}</p>
+                    <GDrive> Have Audio in Google Drive
+
+                      
+                    </GDrive>
+                    
+                  </div>
+                </div>
               </div>
-            <!-- <audio class="audio-player" v-if="hymn.HymnMedia?.AudioSourceUrl" :src="hymn.HymnMedia.AudioSourceUrl" controls></audio> -->
-            <p>
-            <span v-if="!hymn.HymnMedia" class="none-text">None</span>
-            </p>
+            </template>
         </div>
       </div>
     </div>
@@ -327,5 +379,21 @@ th, td {
 }
 .notes {
   overflow-wrap: normal;
+}
+
+.media-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 0.25rem;
+}
+
+.media-col {
+  width: 100%;
+}
+.gdrivewrapper {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
 }
 </style>
