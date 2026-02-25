@@ -54,11 +54,14 @@ const filteredHymns = computed(() => {
     const matchesTag = selectedTag.value === ''
       ? true
       : Array.isArray(h.Tags) && h.Tags.includes(selectedTag.value)
-    const matchesWarning = warningFilter.value === ''
-      ? true
-      : warningFilter.value === 'yes'
-      ? !!h.HymnMedia.Warning
-      : !h.HymnMedia.Warning
+    const hasWarning = h.HymnMedia?.some(m => m.Warning)
+
+const matchesWarning =
+  warningFilter.value === ''
+    ? true
+    : warningFilter.value === 'yes'
+    ? hasWarning
+    : !hasWarning
     return matchesTitle && matchesMedia && matchesTag && matchesWarning
   })
 })
@@ -166,11 +169,11 @@ function decodeHtml(html) {
                         :videoSrc="media.VideoSourceUrl"
                       >
                       <WarningSign v-if="media.Warning" :level="media.Warning.Level" :message="media.Warning.Message" />      
+                      <p v-if="media.Warning">{{ media.Warning.Message }}</p>
                       </MiniAudioPlayer>
                   
 
                       <div class="gdrivewrapper" v-else-if="media.HymnMediaType === 'Google Drive'">
-                        
                           <WarningSign v-if="media.Warning" :level="media.Warning.Level" :message="media.Warning.Message" />
                           <p v-if="media.Warning">{{ media.Warning.Message }}</p>
                         <GDrive> Have Audio in Google Drive
