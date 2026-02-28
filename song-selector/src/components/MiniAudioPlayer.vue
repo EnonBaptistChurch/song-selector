@@ -1,5 +1,6 @@
 <template>
   <div class="audio-player">
+    <slot />
     <!-- Left controls: play, progress, volume, audio download -->
     <div class="left-controls">
       <!-- Play/Pause -->
@@ -115,6 +116,7 @@ onBeforeUnmount(() => {
   gap: 4px;
   font-size: 12px;
   width: 100%;
+  border-bottom: 1px solid #e5e7eb;
 }
 
 .left-controls {

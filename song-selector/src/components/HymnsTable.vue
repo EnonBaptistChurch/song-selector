@@ -3,7 +3,8 @@ import { ref, computed, onMounted } from 'vue'
 import WarningSign from './WarningSign.vue'
 import { getHymns } from '../utils/getHymns.ts'
 import MiniAudioPlayer from './MiniAudioPlayer.vue'
-
+import GDrive from '../assets/GDrive.vue'
+import ChristianHymnsLogo from '../assets/ChristianHymnsLogo.vue'
 const hymns = ref([])
 const search = ref('')
 const hasMediaFilter = ref('')
@@ -53,11 +54,14 @@ const filteredHymns = computed(() => {
     const matchesTag = selectedTag.value === ''
       ? true
       : Array.isArray(h.Tags) && h.Tags.includes(selectedTag.value)
-    const matchesWarning = warningFilter.value === ''
-      ? true
-      : warningFilter.value === 'yes'
-      ? !!h.Warning
-      : !h.Warning
+    const hasWarning = h.HymnMedia?.some(m => m.Warning)
+
+const matchesWarning =
+  warningFilter.value === ''
+    ? true
+    : warningFilter.value === 'yes'
+    ? hasWarning
+    : !hasWarning
     return matchesTitle && matchesMedia && matchesTag && matchesWarning
   })
 })
@@ -69,6 +73,7 @@ function decodeHtml(html) {
   txt.innerHTML = html
   return txt.value
 }
+
 </script>
 
 <template>
@@ -124,34 +129,70 @@ function decodeHtml(html) {
       <table v-if="viewMode === 'table'">
         <thead>
           <tr>
-            <th>Number</th>
+            <th>Hymn Number</th>
             <th>Title</th>
             <th>Media</th>
-            <th>Type</th>
             <th>Notes</th>
           </tr>
         </thead>
         <tbody>
           <tr v-for="hymn in filteredHymns" :key="hymn.Number">
-            <td>{{ hymn.Number }}</td>
+            <td>
+              {{ hymn.Type == 'EMW Christian Hymns' ? '' : hymn.Type }} 
+              <ChristianHymnsLogo 
+                v-if="hymn.Type === 'EMW Christian Hymns'" 
+                style="vertical-align:middle;" />
+              {{ hymn.Number }}
+            </td>
             <td>
               
               <span v-if="hymn.VideoLink">
                 <a :href="hymn.HymnMedia.MediaSourceUrl" target="_blank">{{ decodeHtml(hymn.Title) }}</a>
               </span>
               <span v-else>{{ decodeHtml(hymn.Title)  }}</span>
-              {{    }}<WarningSign v-if="hymn.Warning" :level="hymn.Warning.Level" :message="hymn.Warning.Message" />
             </td>
             <td class="media-cell">
-              
-              <MiniAudioPlayer v-if="hymn.HymnMedia?.AudioSourceUrl" :src="hymn.HymnMedia.AudioSourceUrl" :videoSrc="hymn.HymnMedia?.VideoSourceUrl" />
+              <div class="media-inner">
 
-              
-              <!-- <audio class="audio-player" v-if="hymn.HymnMedia?.AudioSourceUrl" :src="hymn.HymnMedia.AudioSourceUrl" controls></audio>
-              <a v-if="hymn.HymnMedia?.VideoSourceUrl" :href="hymn.HymnMedia.VideoSourceUrl" target="_blank" class="video-link">Video Download</a>
-              <span v-if="!hymn.HymnMedia" class="none-text">None</span> -->
+                <!-- When media exists -->
+                <template v-if="hymn.HymnMedia?.length">
+                  <div class="media-grid">
+                    <div
+                      v-for="(media, index) in hymn.HymnMedia"
+                      :key="media.Id || index"
+                      class="media-col"
+                    >
+                  
+                  <MiniAudioPlayer
+                        v-if="media.HymnMediaType === 'EMW' && media.AudioSourceUrl"
+                        :src="media.AudioSourceUrl"
+                        :videoSrc="media.VideoSourceUrl"
+                      >
+                      <WarningSign v-if="media.Warning" :level="media.Warning.Level" :message="media.Warning.Message" />      
+                      <p v-if="media.Warning">{{ media.Warning.Message }}</p>
+                      </MiniAudioPlayer>
+                  
+
+                      <div class="gdrivewrapper" v-else-if="media.HymnMediaType === 'Google Drive'">
+                          <WarningSign v-if="media.Warning" :level="media.Warning.Level" :message="media.Warning.Message" />
+                          <p v-if="media.Warning">{{ media.Warning.Message }}</p>
+                        <GDrive> Have Audio in Google Drive
+
+                          
+                        </GDrive>
+                        
+                      </div>
+                    </div>
+                  </div>
+                </template>
+
+                <!-- When none -->
+                <div v-else class="media-col none-text">
+                  None
+                </div>
+
+              </div>
             </td>
-            <td class="hymn-type">{{ hymn.Type === 'EMW Christian Hymns' ? 'EMWCH' : hymn.Type }}</td>
             <td class="notes">{{ hymn.Warning?.Message || '' }}</td>
           </tr>
         </tbody>
@@ -160,17 +201,43 @@ function decodeHtml(html) {
       <!-- GRID VIEW -->
       <div v-if="viewMode === 'grid'" class="grid">
         <div v-for="hymn in filteredHymns" :key="hymn.Number" class="card">
-          <h3>{{ hymn.Number }}</h3>
-          <WarningSign v-if="hymn.Warning" :level="hymn.Warning.Level" :message="hymn.Warning.Message" />
+          <h3><ChristianHymnsLogo 
+                v-if="hymn.Type === 'EMW Christian Hymns'" 
+                style="vertical-align:middle;" />{{ hymn.Number }}</h3>
+          <!-- <WarningSign v-if="hymn.Warning" :level="hymn.Warning.Level" :message="hymn.Warning.Message" /> -->
           <p><strong>{{ decodeHtml(hymn.Title) }}</strong></p>
-          <p><strong>Type:</strong> {{ hymn.Type }}</p>
           <p>
             <strong>Media:</strong></p>
-            <MiniAudioPlayer v-if="hymn.HymnMedia?.AudioSourceUrl" :src="hymn.HymnMedia.AudioSourceUrl" :videoSrc="hymn.HymnMedia?.VideoSourceUrl" />
-            <!-- <audio class="audio-player" v-if="hymn.HymnMedia?.AudioSourceUrl" :src="hymn.HymnMedia.AudioSourceUrl" controls></audio> -->
-            <p>
-            <span v-if="!hymn.HymnMedia" class="none-text">None</span>
-            </p>
+            <template v-if="hymn.HymnMedia?.length">
+              <div class="media-grid">
+                <div
+                  v-for="(media, index) in hymn.HymnMedia"
+                  :key="media.Id || index"
+                  class="media-col"
+                >
+              
+              <MiniAudioPlayer
+                    v-if="media.HymnMediaType === 'EMW' && media.AudioSourceUrl"
+                    :src="media.AudioSourceUrl"
+                    :videoSrc="media.VideoSourceUrl"
+                  >
+                  <WarningSign v-if="media.Warning" :level="media.Warning.Level" :message="media.Warning.Message" />      
+                  </MiniAudioPlayer>
+              
+
+                  <div class="gdrivewrapper" v-else-if="media.HymnMediaType === 'Google Drive'">
+                    
+                      <WarningSign v-if="media.Warning" :level="media.Warning.Level" :message="media.Warning.Message" />
+                      <p v-if="media.Warning">{{ media.Warning.Message }}</p>
+                    <GDrive> Have Audio in Google Drive
+
+                      
+                    </GDrive>
+                    
+                  </div>
+                </div>
+              </div>
+            </template>
         </div>
       </div>
     </div>
@@ -315,5 +382,21 @@ th, td {
 }
 .notes {
   overflow-wrap: normal;
+}
+
+.media-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 0.25rem;
+}
+
+.media-col {
+  width: 100%;
+}
+.gdrivewrapper {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
 }
 </style>
