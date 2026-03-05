@@ -5,6 +5,7 @@ import { getHymns } from '../utils/getHymns.ts'
 import MiniAudioPlayer from './MiniAudioPlayer.vue'
 import GDrive from '../assets/GDrive.vue'
 import ChristianHymnsLogo from '../assets/ChristianHymnsLogo.vue'
+
 const hymns = ref([])
 const search = ref('')
 const hasMediaFilter = ref('')
@@ -12,6 +13,7 @@ const loading = ref(true)
 const viewMode = ref('table')
 const selectedTag = ref('')
 const warningFilter = ref('')
+const cacheDate = ref(null)
 
 // ------------------ TAGS ------------------
 const availableTags = computed(() => {
@@ -25,43 +27,70 @@ const availableTags = computed(() => {
 // ------------------ FETCH ------------------
 onMounted(async () => {
   const cached = localStorage.getItem('hymns')
+
   if (cached) {
-    hymns.value = JSON.parse(cached)
+    const parsed = JSON.parse(cached)
+    hymns.value = parsed.data
+    cacheDate.value = parsed.cachedAt
     loading.value = false
     return
   }
 
+  await fetchHymns()
+})
+
+async function fetchHymns() {
   try {
     const data = await getHymns()
+
+    const payload = {
+      data,
+      cachedAt: new Date().toISOString()
+    }
+
     hymns.value = data
-    localStorage.setItem('hymns', JSON.stringify(data))
+    cacheDate.value = payload.cachedAt
+
+    localStorage.setItem('hymns', JSON.stringify(payload))
   } catch (err) {
     console.error('Failed to fetch hymns:', err)
   } finally {
     loading.value = false
   }
-})
+}
+
+function resetCache() {
+  localStorage.removeItem('hymns')
+  loading.value = true
+  fetchHymns()
+}
 
 // ------------------ FILTERING ------------------
 const filteredHymns = computed(() => {
   return hymns.value.filter(h => {
     const matchesTitle = h.Title?.toLowerCase().includes(search.value.toLowerCase())
-    const matchesMedia = hasMediaFilter.value === ''
-      ? true
-      : hasMediaFilter.value === 'yes'
-      ? !!h.HymnMedia
-      : !h.HymnMedia
-    const matchesTag = selectedTag.value === ''
-      ? true
-      : Array.isArray(h.Tags) && h.Tags.includes(selectedTag.value)
+
+    const matchesMedia =
+      hasMediaFilter.value === ''
+        ? true
+        : hasMediaFilter.value === 'yes'
+        ? !!h.HymnMedia
+        : !h.HymnMedia
+
+    const matchesTag =
+      selectedTag.value === ''
+        ? true
+        : Array.isArray(h.Tags) && h.Tags.includes(selectedTag.value)
+
     const hasWarning = h.HymnMedia?.some(m => m.Warning)
 
-const matchesWarning =
-  warningFilter.value === ''
-    ? true
-    : warningFilter.value === 'yes'
-    ? hasWarning
-    : !hasWarning
+    const matchesWarning =
+      warningFilter.value === ''
+        ? true
+        : warningFilter.value === 'yes'
+        ? hasWarning
+        : !hasWarning
+
     return matchesTitle && matchesMedia && matchesTag && matchesWarning
   })
 })
@@ -73,20 +102,28 @@ function decodeHtml(html) {
   txt.innerHTML = html
   return txt.value
 }
-
 </script>
 
 <template>
   <div class="hymns-container">
+
     <!-- Loading -->
     <div v-if="loading" class="loading">Loading hymns… ⏳</div>
 
     <div v-else>
+
+      <!-- Cache info -->
+      <div class="cache-info">
+        <span v-if="cacheDate"/>
+        <button @click="resetCache">Refresh Hymns</button>
+      </div>
+
       <!-- Search -->
       <input v-model="search" placeholder="Filter by title…" class="search-input" />
 
       <!-- Filters -->
       <div class="filters">
+
         <!-- Media -->
         <div class="filter-group">
           <span class="filter-label">Media:</span>
@@ -102,7 +139,14 @@ function decodeHtml(html) {
           <span class="filter-label">Tags:</span>
           <div class="filter-buttons">
             <button :class="{ active: selectedTag === '' }" @click="selectedTag = ''">All</button>
-            <button v-for="tag in availableTags" :key="tag" :class="{ active: selectedTag === tag }" @click="selectedTag = tag">{{ tag }}</button>
+            <button
+              v-for="tag in availableTags"
+              :key="tag"
+              :class="{ active: selectedTag === tag }"
+              @click="selectedTag = tag"
+            >
+              {{ tag }}
+            </button>
           </div>
         </div>
 
@@ -115,6 +159,7 @@ function decodeHtml(html) {
             <button :class="{ active: warningFilter === 'no' }" @click="warningFilter = 'no'">None</button>
           </div>
         </div>
+
       </div>
 
       <!-- View toggle -->
@@ -135,130 +180,207 @@ function decodeHtml(html) {
             <th>Notes</th>
           </tr>
         </thead>
+
         <tbody>
           <tr v-for="hymn in filteredHymns" :key="hymn.Number">
             <td>
-              {{ hymn.Type == 'EMW Christian Hymns' ? '' : hymn.Type }} 
-              <ChristianHymnsLogo 
-                v-if="hymn.Type === 'EMW Christian Hymns'" 
-                style="vertical-align:middle;" />
+              {{ hymn.Type == 'EMW Christian Hymns' ? '' : hymn.Type }}
+
+              <ChristianHymnsLogo
+                v-if="hymn.Type === 'EMW Christian Hymns'"
+                style="vertical-align:middle;"
+              />
+
               {{ hymn.Number }}
             </td>
+
             <td>
-              
               <span v-if="hymn.VideoLink">
-                <a :href="hymn.HymnMedia.MediaSourceUrl" target="_blank">{{ decodeHtml(hymn.Title) }}</a>
+                <a :href="hymn.HymnMedia.MediaSourceUrl" target="_blank">
+                  {{ decodeHtml(hymn.Title) }}
+                </a>
               </span>
-              <span v-else>{{ decodeHtml(hymn.Title)  }}</span>
+
+              <span v-else>
+                {{ decodeHtml(hymn.Title) }}
+              </span>
             </td>
+
             <td class="media-cell">
               <div class="media-inner">
 
-                <!-- When media exists -->
                 <template v-if="hymn.HymnMedia?.length">
+
                   <div class="media-grid">
+
                     <div
                       v-for="(media, index) in hymn.HymnMedia"
                       :key="media.Id || index"
                       class="media-col"
                     >
-                  
-                  <MiniAudioPlayer
+
+                      <MiniAudioPlayer
                         v-if="media.HymnMediaType === 'EMW' && media.AudioSourceUrl"
                         :src="media.AudioSourceUrl"
                         :videoSrc="media.VideoSourceUrl"
                       >
-                      <WarningSign v-if="media.Warning" :level="media.Warning.Level" :message="media.Warning.Message" />      
-                      <p v-if="media.Warning">{{ media.Warning.Message }}</p>
+                        <WarningSign
+                          v-if="media.Warning"
+                          :level="media.Warning.Level"
+                          :message="media.Warning.Message"
+                        />
+
+                        <p v-if="media.Warning">
+                          {{ media.Warning.Message }}
+                        </p>
                       </MiniAudioPlayer>
-                  
 
-                      <div class="gdrivewrapper" v-else-if="media.HymnMediaType === 'Google Drive'">
-                          <WarningSign v-if="media.Warning" :level="media.Warning.Level" :message="media.Warning.Message" />
-                          <p v-if="media.Warning">{{ media.Warning.Message }}</p>
-                        <GDrive> Have Audio in Google Drive
+                      <div
+                        class="gdrivewrapper"
+                        v-else-if="media.HymnMediaType === 'Google Drive'"
+                      >
 
-                          
+                        <WarningSign
+                          v-if="media.Warning"
+                          :level="media.Warning.Level"
+                          :message="media.Warning.Message"
+                        />
+
+                        <p v-if="media.Warning">
+                          {{ media.Warning.Message }}
+                        </p>
+
+                        <GDrive>
+                          Have Audio in Google Drive
                         </GDrive>
-                        
+
                       </div>
+
                     </div>
+
                   </div>
+
                 </template>
 
-                <!-- When none -->
                 <div v-else class="media-col none-text">
                   None
                 </div>
 
               </div>
             </td>
-            <td class="notes">{{ hymn.Warning?.Message || '' }}</td>
+
+            <td class="notes">
+              {{ hymn.Warning?.Message || '' }}
+            </td>
+
           </tr>
         </tbody>
       </table>
 
       <!-- GRID VIEW -->
       <div v-if="viewMode === 'grid'" class="grid">
-        <div v-for="hymn in filteredHymns" :key="hymn.Number" class="card">
-          <h3><ChristianHymnsLogo 
-                v-if="hymn.Type === 'EMW Christian Hymns'" 
-                style="vertical-align:middle;" />{{ hymn.Number }}</h3>
-          <!-- <WarningSign v-if="hymn.Warning" :level="hymn.Warning.Level" :message="hymn.Warning.Message" /> -->
+
+        <div
+          v-for="hymn in filteredHymns"
+          :key="hymn.Number"
+          class="card"
+        >
+
+          <h3>
+            <ChristianHymnsLogo
+              v-if="hymn.Type === 'EMW Christian Hymns'"
+              style="vertical-align:middle;"
+            />
+            {{ hymn.Number }}
+          </h3>
+
           <p><strong>{{ decodeHtml(hymn.Title) }}</strong></p>
-          <p>
-            <strong>Media:</strong></p>
-            <template v-if="hymn.HymnMedia?.length">
-              <div class="media-grid">
-                <div
-                  v-for="(media, index) in hymn.HymnMedia"
-                  :key="media.Id || index"
-                  class="media-col"
+
+          <p><strong>Media:</strong></p>
+
+          <template v-if="hymn.HymnMedia?.length">
+
+            <div class="media-grid">
+
+              <div
+                v-for="(media, index) in hymn.HymnMedia"
+                :key="media.Id || index"
+                class="media-col"
+              >
+
+                <MiniAudioPlayer
+                  v-if="media.HymnMediaType === 'EMW' && media.AudioSourceUrl"
+                  :src="media.AudioSourceUrl"
+                  :videoSrc="media.VideoSourceUrl"
                 >
-              
-              <MiniAudioPlayer
-                    v-if="media.HymnMediaType === 'EMW' && media.AudioSourceUrl"
-                    :src="media.AudioSourceUrl"
-                    :videoSrc="media.VideoSourceUrl"
-                  >
-                  <WarningSign v-if="media.Warning" :level="media.Warning.Level" :message="media.Warning.Message" />      
-                  </MiniAudioPlayer>
-              
+                  <WarningSign
+                    v-if="media.Warning"
+                    :level="media.Warning.Level"
+                    :message="media.Warning.Message"
+                  />
+                </MiniAudioPlayer>
 
-                  <div class="gdrivewrapper" v-else-if="media.HymnMediaType === 'Google Drive'">
-                    
-                      <WarningSign v-if="media.Warning" :level="media.Warning.Level" :message="media.Warning.Message" />
-                      <p v-if="media.Warning">{{ media.Warning.Message }}</p>
-                    <GDrive> Have Audio in Google Drive
+                <div
+                  class="gdrivewrapper"
+                  v-else-if="media.HymnMediaType === 'Google Drive'"
+                >
 
-                      
-                    </GDrive>
-                    
-                  </div>
+                  <WarningSign
+                    v-if="media.Warning"
+                    :level="media.Warning.Level"
+                    :message="media.Warning.Message"
+                  />
+
+                  <p v-if="media.Warning">
+                    {{ media.Warning.Message }}
+                  </p>
+
+                  <GDrive>
+                    Have Audio in Google Drive
+                  </GDrive>
+
                 </div>
+
               </div>
-            </template>
+
+            </div>
+
+          </template>
+
         </div>
+
       </div>
+
     </div>
   </div>
 </template>
 
 <style scoped>
-/* Container */
+
 .hymns-container {
   font-family: sans-serif;
   font-size: 0.95rem;
   padding: 1rem;
 }
 
-/* Loading */
 .loading {
   text-align: center;
   margin: 2rem 0;
 }
 
-/* Search */
+.cache-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+  font-size: 0.9rem;
+}
+
+.cache-info button {
+  padding: 0.3rem 0.6rem;
+  cursor: pointer;
+}
+
 .search-input {
   width: 100%;
   padding: 0.5rem;
@@ -267,7 +389,6 @@ function decodeHtml(html) {
   border-radius: 4px;
 }
 
-/* Filters */
 .filters {
   display: flex;
   flex-direction: column;
@@ -299,11 +420,6 @@ function decodeHtml(html) {
   background: #fff;
   cursor: pointer;
   border-radius: 4px;
-  transition: all 0.2s;
-}
-
-.filter-buttons button:hover {
-  background: #f0f0f0;
 }
 
 .filter-buttons button.active {
@@ -312,31 +428,14 @@ function decodeHtml(html) {
   border-color: #2563eb;
 }
 
-/* View toggle */
 .view-toggle {
   margin: 1rem 0;
 }
 
-.view-toggle button {
-  margin-right: 0.5rem;
-  padding: 0.4rem 0.75rem;
-  cursor: pointer;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  background: #fff;
-}
-
-.view-toggle button:disabled {
-  background: #e5e5e5;
-  cursor: default;
-}
-
-/* Summary */
 .summary {
   padding: 0.5rem 0;
 }
 
-/* Table */
 table {
   width: 100%;
   border-collapse: collapse;
@@ -350,23 +449,6 @@ th, td {
   vertical-align: top;
 }
 
-
-
-.video-link {
-  color: #2563eb;
-  text-decoration: none;
-}
-
-.video-link:hover {
-  text-decoration: underline;
-}
-
-.none-text {
-  font-style: italic;
-  color: #888;
-}
-
-/* Grid */
 .grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -380,9 +462,6 @@ th, td {
   background: #fff;
   font-size: 0.95rem;
 }
-.notes {
-  overflow-wrap: normal;
-}
 
 .media-grid {
   display: grid;
@@ -393,10 +472,17 @@ th, td {
 .media-col {
   width: 100%;
 }
+
+.none-text {
+  font-style: italic;
+  color: #888;
+}
+
 .gdrivewrapper {
   display: flex;
   align-items: center;
   gap: 6px;
   font-size: 14px;
 }
+
 </style>
