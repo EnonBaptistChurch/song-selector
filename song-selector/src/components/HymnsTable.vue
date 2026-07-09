@@ -184,6 +184,7 @@ function decodeHtml(html) {
         <tbody>
           <tr v-for="hymn in filteredHymns" :key="hymn.Number">
             <td>
+              <div class="hymn-container">
               {{ hymn.Type == 'EMW Christian Hymns' ? '' : hymn.Type }}
 
               <ChristianHymnsLogo
@@ -192,6 +193,7 @@ function decodeHtml(html) {
               />
 
               {{ hymn.Number }}
+                </div>
             </td>
 
             <td>
@@ -361,6 +363,10 @@ function decodeHtml(html) {
   font-family: sans-serif;
   font-size: 0.95rem;
   padding: 1rem;
+}
+
+.hymn-container {
+  display: flex;
 }
 
 .loading {
